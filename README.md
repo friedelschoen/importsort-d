@@ -6,6 +6,7 @@
 
 ### Prerequirements
 
+- [`make`](https://www.gnu.org/software/make/)
 - [`dmd`](https://dlang.org/)
 
 ### Building
