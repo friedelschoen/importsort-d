@@ -1,0 +1,9 @@
+name "importsort-d"
+description "sort imports of a .d-file"
+authors "Friedel Schoen"
+copyright "Copyright © 2022, Friedel Schoen"
+license "zlib"
+
+targetType "executable"
+targetPath "bin"
+targetName "importsort-d"

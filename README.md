@@ -1,27 +1,26 @@
 # Sort Imports for [*D*](https://dlang.org/)
 
-> `sortimport-d` can sort your dozens of `import`'s in a `.d` file (no matter where)
+`sortimport-d` can sort your dozens of `import`'s in a `.d` file (no matter where)
 
 ## Installation
 
 ### Prerequirements
 
-- [`make`](https://www.gnu.org/software/make/)
+- [`dub`](https://dub.pm/)
 - [`dmd`](https://dlang.org/)
 
 ### Building
 
-Get the repository with `git`:
+Get the repository with `git` and compile everything with `dub`
 ```
 $ git clone https://github.com/friedelschoen/importsort-d
 $ cd importsort-d
+$ dub build
 ```
 
-And finally build this project with
-```
-$ make
-# make install
-```
+If everything went fine, there should be a binary at `bin/importsort-d`.
+
+Copy this into a directory included in `$PATH` (`/usr/bin` for example) to make this command working global.
 
 ## Usage
 

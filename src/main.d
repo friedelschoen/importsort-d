@@ -1,6 +1,6 @@
 // (c) 2022 Friedel Schon <derfriedmundschoen@gmail.com>
 
-module importsort;
+module source.main;
 
 import core.stdc.stdlib : exit;
 import std.algorithm : map, sort;
