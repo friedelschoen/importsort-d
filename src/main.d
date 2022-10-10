@@ -3,22 +3,41 @@
 module importsort;
 
 import core.stdc.stdlib : exit;
-import std.algorithm : map, sort;
+import std.algorithm : map, sort, findSplit;
 import std.array : array;
 import std.file : copy, remove;
 import std.regex : ctRegex, matchFirst;
 import std.stdio : File, stderr, stdin, stdout;
-import std.string : format, split, strip, stripLeft;
-import std.typecons : Yes;
+import std.string : format, split, strip, stripLeft, indexOf;
+import std.typecons : Yes, Tuple, tuple;
+
+//alias Identifier = Tuple!(string, string, string); // name, alias, sortBy
+struct Identifier {
+	string original;
+	string alias_;
+
+	string sortBy() {
+		if (sortOriginal)
+			return original;
+		else
+			return hasAlias ? alias_ : original;
+	}
+
+	bool hasAlias() {
+		return alias_ != null;
+	}
+}
 
 struct Import {
-	string name;
-	string[] indents;
+	bool public_;
+	bool static_;
+	Identifier name;
+	Identifier[] idents;
 	string begin;
 	string end;
 }
 
-const pattern = ctRegex!`^([ \t]*)import[ \t]+([a-zA-Z._]+)[ \t]*(:[ \t]*\w+(?:[ \t]*,[ \t]*\w+)*)?[ \t]*;[ \t]*([\n\r]*)$`;
+const pattern = ctRegex!`^(\s*)(?:(public|static)\s+)?import\s+([a-zA-Z._]+)(?:\s*=\s*(\w+))?\s*(:\s*\w+(?:\s*=\s*\w+)?(?:\s*,\s*\w+(?:\s*=\s*\w+)?)*)?\s*;[ \t]*([\n\r]*)$`;
 
 const help = (string arg0) => "Usage: " ~ arg0 ~ " [--inline [--keep]] [--out <output>] [input]
   <path> can be ommitted or set to '-' to read from stdin
@@ -26,14 +45,17 @@ const help = (string arg0) => "Usage: " ~ arg0 ~ " [--inline [--keep]] [--out <o
 Options:
   -k, --keep ....... keeps a backup if using '--inline'
   -i, --inline ..... writes to the input
-  -o, --out <path> . writes to `path` instead of stdout";
+  -o, --out <path> . writes to `path` instead of stdout
+
+  -r, --original ... sort by original not by binding";
+
+bool inline = false;
+bool keep = false;
+string output = null;
+string path = null;
+bool sortOriginal = false;
 
 void main(string[] args) {
-	bool inline = false;
-	bool keep = false;
-	string output = null;
-	string path = null;
-
 	bool nextout = false;
 
 	foreach (arg; args[1 .. $]) {
@@ -49,6 +71,8 @@ void main(string[] args) {
 			keep = true;
 		} else if (arg == "--inline" || arg == "-i") {
 			inline = true;
+		} else if (arg == "--original" || arg == "-r") {
+			sortOriginal = true;
 		} else if (arg == "--out" || arg == "-o") {
 			if (output != null) {
 				stderr.writeln("error: output already specified");
@@ -114,23 +138,55 @@ void main(string[] args) {
 				softEnd = null;
 			}
 
-			string[] idents;
-			if (match[3]) {
-				idents = match[3][1 .. $].split(",").map!(x => x.idup.strip).array;
-				idents.sort();
+			Import im;
+			if (match[4]) {
+				im.name = Identifier(match[3].idup, match[4].idup);
+			} else {
+				im.name = Identifier(match[3].idup);
 			}
-			matches ~= Import(match[2].idup, idents, match[1].idup, match[4].idup);
+			im.begin = match[1].idup;
+			im.end = match[6].idup;
+
+			if (match[2] == "static")
+				im.static_ = true;
+			else if (match[2] == "public")
+				im.public_ = true;
+
+			if (match[5]) {
+				foreach (id; match[5][1 .. $].split(",")) {
+					if (auto pair = id.idup.findSplit("=")) { // has alias
+						im.idents ~= Identifier(pair[0].strip, pair[2].strip);
+					} else {
+						im.idents ~= Identifier(id.idup.strip);
+					}
+				}
+				im.idents.sort!((a, b) => a.sortBy < b.sortBy);
+			}
+			matches ~= im;
 		} else {
 			if (!softEnd && line.stripLeft == "") {
 				softEnd = line.idup;
 			} else {
 				if (matches) {
-					matches.sort!((a, b) => a.name < b.name);
+					matches.sort!((a, b) => a.name.sortBy < b.name.sortBy);
 					foreach (m; matches) {
-						outfile.writef("%simport %s", m.begin, m.name);
-						foreach (i, ident; m.indents) {
+						outfile.write(m.begin);
+						if (m.public_)
+							outfile.write("public ");
+						if (m.static_)
+							outfile.write("static ");
+						if (m.name.hasAlias) {
+							outfile.writef("import %s = %s", m.name.original, m.name.alias_);
+						} else {
+							outfile.write("import " ~ m.name.original);
+						}
+						foreach (i, ident; m.idents) {
 							auto begin = i == 0 ? " : " : ", ";
-							outfile.write(begin ~ ident);
+							if (ident.hasAlias) { // hasAlias
+								outfile.writef("%s%s = %s", begin, ident.original, ident.alias_);
+							} else {
+								outfile.write(begin ~ ident.original);
+							}
 						}
 						outfile.writef(";%s", m.end);
 					}
