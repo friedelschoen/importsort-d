@@ -3,13 +3,13 @@
 module importsort;
 
 import core.stdc.stdlib : exit;
-import std.algorithm : map, sort, findSplit;
+import std.algorithm : findSplit, map, sort;
 import std.array : array;
 import std.file : copy, remove;
 import std.regex : ctRegex, matchFirst;
 import std.stdio : File, stderr, stdin, stdout;
-import std.string : format, split, strip, stripLeft, indexOf;
-import std.typecons : Yes, Tuple, tuple;
+import std.string : format, indexOf, split, strip, stripLeft;
+import std.typecons : Tuple, Yes, tuple;
 
 struct Identifier {
 	string original;

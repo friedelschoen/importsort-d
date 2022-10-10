@@ -1,5 +1,7 @@
 # Sort Imports for [D](https://dlang.org/)
 
+<img src="assets/importsort-d.png" alt="logo" width="256" /> 
+
 `sortimport-d` can sort your dozens of `import`'s in a `.d` file (no matter where)
 
 ## Installation
@@ -35,7 +37,6 @@ $ importsort-d [--inline [--keep]] [--out <output>] [--original] [--special] [<i
 | `-i, --inline`        | changes the input                              |
 | `-k, --keep`          | keeps a backup of the input                    |
 | `-o, --output <path>` | writes to `path` rather then writing to STDOUT |
-| -                     |                                               |
 | `-r, --original`      | sorts by original rather then the binding      |
 | `-s, --special`       | public and static imports first                |
 
@@ -44,6 +45,6 @@ $ importsort-d [--inline [--keep]] [--out <output>] [--original] [--special] [<i
 
 This whole project is licensed under the beautiful terms of the `zlib-license`.
 
-Further information [here](LICENSE)
+Further information [here](/LICENSE)
 
 > made with love and a lot of cat memes
