@@ -1,4 +1,4 @@
-# Sort Imports for [*D*](https://dlang.org/)
+# Sort Imports for [D](https://dlang.org/)
 
 `sortimport-d` can sort your dozens of `import`'s in a `.d` file (no matter where)
 
@@ -25,16 +25,19 @@ Copy this into a directory included in `$PATH` (`/usr/bin` for example) to make 
 ## Usage
 
 ```
-$ importsort-d [--inline [--keep]] [--out <output>] [<input>]
+$ importsort-d [--inline [--keep]] [--out <output>] [--original] [--special] [<input>]
 ```
 
 > `input` may be omitted or set to `-` to read from STDIN
 
-| option                  | description                                    |
-|:-----------------------:| ---------------------------------------------- |
-| `-i`, `--inline`        | changes the input                              |
-| `-k`, `--keep`          | keeps a backup of the input                    |
-| `-o`, `--output <path>` | writes to `path` rather then writing to STDOUT |
+| option                | description                                    |
+| --------------------- | ---------------------------------------------- |
+| `-i, --inline`        | changes the input                              |
+| `-k, --keep`          | keeps a backup of the input                    |
+| `-o, --output <path>` | writes to `path` rather then writing to STDOUT |
+| -                     |                                               |
+| `-r, --original`      | sorts by original rather then the binding      |
+| `-s, --special`       | public and static imports first                |
 
 
 ## License
@@ -42,3 +45,5 @@ $ importsort-d [--inline [--keep]] [--out <output>] [<input>]
 This whole project is licensed under the beautiful terms of the `zlib-license`.
 
 Further information [here](LICENSE)
+
+> made with love and a lot of cat memes

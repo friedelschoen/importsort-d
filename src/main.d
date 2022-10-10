@@ -11,7 +11,6 @@ import std.stdio : File, stderr, stdin, stdout;
 import std.string : format, split, strip, stripLeft, indexOf;
 import std.typecons : Yes, Tuple, tuple;
 
-//alias Identifier = Tuple!(string, string, string); // name, alias, sortBy
 struct Identifier {
 	string original;
 	string alias_;
@@ -35,11 +34,17 @@ struct Import {
 	Identifier[] idents;
 	string begin;
 	string end;
+
+	string sortBy() {
+		if (special && (public_ || static_))
+			return '\0' ~ name.sortBy;
+		return name.sortBy;
+	}
 }
 
-const pattern = ctRegex!`^(\s*)(?:(public|static)\s+)?import\s+([a-zA-Z._]+)(?:\s*=\s*(\w+))?\s*(:\s*\w+(?:\s*=\s*\w+)?(?:\s*,\s*\w+(?:\s*=\s*\w+)?)*)?\s*;[ \t]*([\n\r]*)$`;
+const pattern = ctRegex!`^(\s*)(?:(public|static)\s+)?import\s+(?:(\w+)\s*=\s*)?([a-zA-Z._]+)\s*(:\s*\w+(?:\s*=\s*\w+)?(?:\s*,\s*\w+(?:\s*=\s*\w+)?)*)?\s*;[ \t]*([\n\r]*)$`;
 
-const help = (string arg0) => "Usage: " ~ arg0 ~ " [--inline [--keep]] [--out <output>] [input]
+const help = (string arg0) => "Usage: " ~ arg0 ~ " [--inline [--keep]] [--out <output>] [--original] [--special] [input]
   <path> can be ommitted or set to '-' to read from stdin
 
 Options:
@@ -47,13 +52,43 @@ Options:
   -i, --inline ..... writes to the input
   -o, --out <path> . writes to `path` instead of stdout
 
+  -s, --special .... public and static imports first
   -r, --original ... sort by original not by binding";
 
 bool inline = false;
 bool keep = false;
+bool special = false;
 string output = null;
 string path = null;
 bool sortOriginal = false;
+
+void writeImports(File outfile, Import[] matches) {
+	if (!matches)
+		return;
+
+	matches.sort!((a, b) => a.sortBy < b.sortBy);
+	foreach (m; matches) {
+		outfile.write(m.begin);
+		if (m.public_)
+			outfile.write("public ");
+		if (m.static_)
+			outfile.write("static ");
+		if (m.name.hasAlias) {
+			outfile.writef("import %s = %s", m.name.alias_, m.name.original);
+		} else {
+			outfile.write("import " ~ m.name.original);
+		}
+		foreach (i, ident; m.idents) {
+			auto begin = i == 0 ? " : " : ", ";
+			if (ident.hasAlias) { // hasAlias
+				outfile.writef("%s%s = %s", begin, ident.alias_, ident.original);
+			} else {
+				outfile.write(begin ~ ident.original);
+			}
+		}
+		outfile.writef(";%s", m.end);
+	}
+}
 
 void main(string[] args) {
 	bool nextout = false;
@@ -66,9 +101,10 @@ void main(string[] args) {
 		if (arg == "--help" || arg == "-h") {
 			stdout.writeln(help(args[0]));
 			return;
-		}
-		if (arg == "--keep" || arg == "-k") {
+		} else if (arg == "--keep" || arg == "-k") {
 			keep = true;
+		} else if (arg == "--special" || arg == "-s") {
+			special = true;
 		} else if (arg == "--inline" || arg == "-i") {
 			inline = true;
 		} else if (arg == "--original" || arg == "-r") {
@@ -80,6 +116,10 @@ void main(string[] args) {
 				exit(1);
 			}
 			nextout = true;
+		} else if (arg[0] == '-') {
+			stderr.writef("error: unknown option '%s'\n", arg);
+			stderr.writeln(help(args[0]));
+			exit(1);
 		} else {
 			if (path != null) {
 				stderr.writeln("error: input already specified");
@@ -129,6 +169,7 @@ void main(string[] args) {
 
 	string softEnd = null;
 	Import[] matches;
+
 	foreach (line; infile.byLine(Yes.keepTerminator)) {
 		auto match = matchFirst(line, pattern);
 		if (!match.empty) { // is import
@@ -139,10 +180,10 @@ void main(string[] args) {
 			}
 
 			Import im;
-			if (match[4]) {
-				im.name = Identifier(match[3].idup, match[4].idup);
+			if (match[3]) {
+				im.name = Identifier(match[4].idup, match[3].idup);
 			} else {
-				im.name = Identifier(match[3].idup);
+				im.name = Identifier(match[4].idup);
 			}
 			im.begin = match[1].idup;
 			im.end = match[6].idup;
@@ -155,7 +196,7 @@ void main(string[] args) {
 			if (match[5]) {
 				foreach (id; match[5][1 .. $].split(",")) {
 					if (auto pair = id.idup.findSplit("=")) { // has alias
-						im.idents ~= Identifier(pair[0].strip, pair[2].strip);
+						im.idents ~= Identifier(pair[2].strip, pair[0].strip);
 					} else {
 						im.idents ~= Identifier(id.idup.strip);
 					}
@@ -168,31 +209,10 @@ void main(string[] args) {
 				softEnd = line.idup;
 			} else {
 				if (matches) {
-					matches.sort!((a, b) => a.name.sortBy < b.name.sortBy);
-					foreach (m; matches) {
-						outfile.write(m.begin);
-						if (m.public_)
-							outfile.write("public ");
-						if (m.static_)
-							outfile.write("static ");
-						if (m.name.hasAlias) {
-							outfile.writef("import %s = %s", m.name.original, m.name.alias_);
-						} else {
-							outfile.write("import " ~ m.name.original);
-						}
-						foreach (i, ident; m.idents) {
-							auto begin = i == 0 ? " : " : ", ";
-							if (ident.hasAlias) { // hasAlias
-								outfile.writef("%s%s = %s", begin, ident.original, ident.alias_);
-							} else {
-								outfile.write(begin ~ ident.original);
-							}
-						}
-						outfile.writef(";%s", m.end);
-					}
-
+					outfile.writeImports(matches);
 					matches = [];
 				}
+
 				if (softEnd) {
 					outfile.write(softEnd);
 					softEnd = null;
@@ -202,10 +222,11 @@ void main(string[] args) {
 		}
 	}
 
+	outfile.writeImports(matches);
+
 	infile.close();
+	outfile.close();
 
 	if (inline && !keep)
 		remove(path ~ ".bak");
-
-	outfile.close();
 }
