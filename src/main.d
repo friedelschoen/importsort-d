@@ -115,8 +115,12 @@ void main(string[] args) {
 					outfile.write(softEnd);
 				softEnd = null;
 			}
-			string[] idents = match[3][1 .. $].split(",").map!(x => x.idup.strip).array;
-			idents.sort();
+
+			string[] idents;
+			if (match[3]) {
+				idents = match[3][1 .. $].split(",").map!(x => x.idup.strip).array;
+				idents.sort();
+			}
 			matches ~= Import(match[2].idup, idents, match[1].idup, match[4].idup);
 		} else {
 			if (!softEnd && line.stripLeft == "") {
