@@ -1,12 +1,11 @@
 // (c) 2022 Friedel Schon <derfriedmundschoen@gmail.com>
 
-module source.main;
+module importsort;
 
 import core.stdc.stdlib : exit;
 import std.algorithm : map, sort;
 import std.array : array;
 import std.file : copy, remove;
-import std.range : empty;
 import std.regex : ctRegex, matchFirst;
 import std.stdio : File, stderr, stdin, stdout;
 import std.string : format, split, strip, stripLeft;
@@ -15,20 +14,19 @@ import std.typecons : Yes;
 struct Import {
 	string name;
 	string[] indents;
-
 	string begin;
 	string end;
 }
 
 const pattern = ctRegex!`^([ \t]*)import[ \t]+([a-zA-Z._]+)[ \t]*(:[ \t]*\w+(?:[ \t]*,[ \t]*\w+)*)?[ \t]*;[ \t]*([\n\r]*)$`;
 
-const help = (string arg0) => "Usage: %s [options] [path]
+const help = (string arg0) => "Usage: " ~ arg0 ~ " [--inline [--keep]] [--out <output>] [input]
   <path> can be ommitted or set to '-' to read from stdin
 
 Options:
   -k, --keep ....... keeps a backup if using '--inline'
-  -i, --inline ..... changes the input
-  -o, --out <path> . writes to `path` instead of stdout".format(arg0);
+  -i, --inline ..... writes to the input
+  -o, --out <path> . writes to `path` instead of stdout";
 
 void main(string[] args) {
 	bool inline = false;
@@ -111,7 +109,7 @@ void main(string[] args) {
 		auto match = matchFirst(line, pattern);
 		if (!match.empty) { // is import
 			if (softEnd) {
-				if (matches.empty)
+				if (!matches)
 					outfile.write(softEnd);
 				softEnd = null;
 			}
@@ -126,7 +124,7 @@ void main(string[] args) {
 			if (!softEnd && line.stripLeft == "") {
 				softEnd = line.idup;
 			} else {
-				if (!matches.empty) {
+				if (matches) {
 					matches.sort!((a, b) => a.name < b.name);
 					foreach (m; matches) {
 						outfile.writef("%simport %s", m.begin, m.name);
