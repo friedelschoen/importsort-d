@@ -5,7 +5,7 @@ module importsort;
 import core.stdc.stdlib : exit;
 import std.algorithm : findSplit, map, sort;
 import std.array : array;
-import std.file : rename;
+import std.file : exists, isFile, rename;
 import std.regex : ctRegex, matchFirst;
 import std.stdio : File, stderr, stdin, stdout;
 import std.string : format, indexOf, split, strip, stripLeft;
@@ -225,11 +225,13 @@ void main(string[] args) {
 	}
 
 	File infile, outfile;
-	if (inline) {
-		infile = File(path);
-	} else if (path == "-") {
+	if (path == "-") {
 		infile = stdin;
 	} else {
+		if (!path.exists() || !path.isFile()) {
+			stderr.writef("error: file '%s' does not exist or is not a file.\n", path);
+			exit(1);
+		}
 		infile = File(path);
 	}
 
