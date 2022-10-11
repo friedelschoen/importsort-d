@@ -5,7 +5,7 @@ module importsort;
 import core.stdc.stdlib : exit;
 import std.algorithm : findSplit, map, sort;
 import std.array : array;
-import std.file : copy, remove;
+import std.file : rename;
 import std.regex : ctRegex, matchFirst;
 import std.stdio : File, stderr, stdin, stdout;
 import std.string : format, indexOf, split, strip, stripLeft;
@@ -163,23 +163,22 @@ void main(string[] args) {
 
 	File infile, outfile;
 	if (inline) {
-		copy(path, path ~ ".bak");
-		infile = File(path ~ ".bak");
-		scope (exit)
-			remove(path ~ ".bak");
+		infile = File(path);
 	} else if (path == "-") {
 		infile = stdin;
 	} else {
 		infile = File(path);
 	}
 
-	if (inline)
-		outfile = File(path, "w");
-	else if (output)
+	if (inline) {
+		outfile = File(path ~ ".new", "w");
+		scope (exit)
+			rename(path ~ ".new", path);
+	} else if (output) {
 		outfile = File(output, "w");
-	else
+	} else {
 		outfile = stdout;
-
+	}
 	string softEnd = null;
 	Import[] matches;
 
