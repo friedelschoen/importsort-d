@@ -35,7 +35,7 @@ $ importsort-d [--inline [--keep]] [--out <output>] [--original] [--special] [<i
 | option                | description                                    |
 | --------------------- | ---------------------------------------------- |
 | `-i, --inline`        | changes the input                              |
-| `-k, --keep`          | keeps a backup of the input                    |
+| `-k, --keep`          | keeps the line as-is instead of formatting     |
 | `-o, --output <path>` | writes to `path` rather then writing to STDOUT |
 | `-r, --original`      | sorts by original rather then the binding      |
 | `-s, --special`       | public and static imports first                |

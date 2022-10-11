@@ -28,6 +28,8 @@ struct Identifier {
 }
 
 struct Import {
+	string line;
+
 	bool public_;
 	bool static_;
 	Identifier name;
@@ -42,18 +44,25 @@ struct Import {
 	}
 }
 
-const pattern = ctRegex!`^(\s*)(?:(public|static)\s+)?import\s+(?:(\w+)\s*=\s*)?([a-zA-Z._]+)\s*(:\s*\w+(?:\s*=\s*\w+)?(?:\s*,\s*\w+(?:\s*=\s*\w+)?)*)?\s*;[ \t]*([\n\r]*)$`;
+enum VERSION = "0.1.0";
 
-const help = (string arg0) => "Usage: " ~ arg0 ~ " [--inline [--keep]] [--out <output>] [--original] [--special] [input]
-  <path> can be ommitted or set to '-' to read from stdin
+enum pattern = ctRegex!`^(\s*)(?:(public|static)\s+)?import\s+(?:(\w+)\s*=\s*)?([a-zA-Z._]+)\s*(:\s*\w+(?:\s*=\s*\w+)?(?:\s*,\s*\w+(?:\s*=\s*\w+)?)*)?\s*;[ \t]*([\n\r]*)$`;
+
+enum help = "importsort-d v" ~ VERSION ~ "
+
+Usage: importsort-d [-i [-k]] [-o <output>] [-r] [-s] [-w [-i <msec>]] <input...>
+  <input> can be set to '-' to read from stdin
 
 Options:
-  -k, --keep ....... keeps a backup if using '--inline'
-  -i, --inline ..... writes to the input
-  -o, --out <path> . writes to `path` instead of stdout
+  -k, --keep ............ keeps the line as-is instead of formatting
+  -i, --inline .......... writes to the input
+  -o, --out <path> ...... writes to `path` instead of stdout
 
-  -s, --special .... public and static imports first
-  -r, --original ... sort by original not by binding";
+  -s, --special ......... public and static imports first
+  -r, --original ........ sort by original not by binding
+
+  -h, --help ............ prints this message
+  -v, --verbose ......... prints useful messages";
 
 bool inline = false;
 bool keep = false;
@@ -68,25 +77,29 @@ void writeImports(File outfile, Import[] matches) {
 
 	matches.sort!((a, b) => a.sortBy < b.sortBy);
 	foreach (m; matches) {
-		outfile.write(m.begin);
-		if (m.public_)
-			outfile.write("public ");
-		if (m.static_)
-			outfile.write("static ");
-		if (m.name.hasAlias) {
-			outfile.writef("import %s = %s", m.name.alias_, m.name.original);
+		if (keep) {
+			outfile.write(m.line);
 		} else {
-			outfile.write("import " ~ m.name.original);
-		}
-		foreach (i, ident; m.idents) {
-			auto begin = i == 0 ? " : " : ", ";
-			if (ident.hasAlias) { // hasAlias
-				outfile.writef("%s%s = %s", begin, ident.alias_, ident.original);
+			outfile.write(m.begin);
+			if (m.public_)
+				outfile.write("public ");
+			if (m.static_)
+				outfile.write("static ");
+			if (m.name.hasAlias) {
+				outfile.writef("import %s = %s", m.name.alias_, m.name.original);
 			} else {
-				outfile.write(begin ~ ident.original);
+				outfile.write("import " ~ m.name.original);
 			}
+			foreach (i, ident; m.idents) {
+				auto begin = i == 0 ? " : " : ", ";
+				if (ident.hasAlias) { // hasAlias
+					outfile.writef("%s%s = %s", begin, ident.alias_, ident.original);
+				} else {
+					outfile.write(begin ~ ident.original);
+				}
+			}
+			outfile.writef(";%s", m.end);
 		}
-		outfile.writef(";%s", m.end);
 	}
 }
 
@@ -99,7 +112,7 @@ void main(string[] args) {
 			nextout = false;
 		}
 		if (arg == "--help" || arg == "-h") {
-			stdout.writeln(help(args[0]));
+			stdout.writeln(help);
 			return;
 		} else if (arg == "--keep" || arg == "-k") {
 			keep = true;
@@ -112,18 +125,18 @@ void main(string[] args) {
 		} else if (arg == "--out" || arg == "-o") {
 			if (output != null) {
 				stderr.writeln("error: output already specified");
-				stderr.writeln(help(args[0]));
+				stderr.writeln(help);
 				exit(1);
 			}
 			nextout = true;
 		} else if (arg[0] == '-') {
 			stderr.writef("error: unknown option '%s'\n", arg);
-			stderr.writeln(help(args[0]));
+			stderr.writeln(help);
 			exit(1);
 		} else {
 			if (path != null) {
 				stderr.writeln("error: input already specified");
-				stderr.writeln(help(args[0]));
+				stderr.writeln(help);
 				exit(1);
 			}
 			path = arg;
@@ -131,15 +144,12 @@ void main(string[] args) {
 	}
 	if (output != null && output == path) {
 		stderr.writeln("error: input and output cannot be the same; use '--inline'");
-		stderr.writeln(help(args[0]));
-		exit(1);
-	}
-	if (!inline && keep) {
-		stderr.writeln("error: you have to specify '--keep' in combination with '--inline'");
+		stderr.writeln(help);
 		exit(1);
 	}
 	if (inline && output != null) {
 		stderr.writeln("error: you cannot specify '--inline' and '--out' at the same time");
+		stderr.writeln(help);
 		exit(1);
 	}
 	if (!path) {
@@ -147,6 +157,7 @@ void main(string[] args) {
 	}
 	if (inline && path == "-") {
 		stderr.writeln("error: you cannot specify '--inline' and read from stdin");
+		stderr.writeln(help);
 		exit(1);
 	}
 
@@ -154,6 +165,8 @@ void main(string[] args) {
 	if (inline) {
 		copy(path, path ~ ".bak");
 		infile = File(path ~ ".bak");
+		scope (exit)
+			remove(path ~ ".bak");
 	} else if (path == "-") {
 		infile = stdin;
 	} else {
@@ -171,22 +184,22 @@ void main(string[] args) {
 	Import[] matches;
 
 	foreach (line; infile.byLine(Yes.keepTerminator)) {
-		auto match = matchFirst(line, pattern);
-		if (!match.empty) { // is import
+		auto linestr = line.idup;
+		if (auto match = matchFirst(linestr, pattern)) { // is import
 			if (softEnd) {
 				if (!matches)
 					outfile.write(softEnd);
 				softEnd = null;
 			}
 
-			Import im;
+			auto im = Import(linestr);
 			if (match[3]) {
-				im.name = Identifier(match[4].idup, match[3].idup);
+				im.name = Identifier(match[4], match[3]);
 			} else {
-				im.name = Identifier(match[4].idup);
+				im.name = Identifier(match[4]);
 			}
-			im.begin = match[1].idup;
-			im.end = match[6].idup;
+			im.begin = match[1];
+			im.end = match[6];
 
 			if (match[2] == "static")
 				im.static_ = true;
@@ -195,18 +208,18 @@ void main(string[] args) {
 
 			if (match[5]) {
 				foreach (id; match[5][1 .. $].split(",")) {
-					if (auto pair = id.idup.findSplit("=")) { // has alias
+					if (auto pair = id.findSplit("=")) { // has alias
 						im.idents ~= Identifier(pair[2].strip, pair[0].strip);
 					} else {
-						im.idents ~= Identifier(id.idup.strip);
+						im.idents ~= Identifier(id.strip);
 					}
 				}
 				im.idents.sort!((a, b) => a.sortBy < b.sortBy);
 			}
 			matches ~= im;
 		} else {
-			if (!softEnd && line.stripLeft == "") {
-				softEnd = line.idup;
+			if (!softEnd && linestr.stripLeft == "") {
+				softEnd = linestr;
 			} else {
 				if (matches) {
 					outfile.writeImports(matches);
@@ -226,7 +239,4 @@ void main(string[] args) {
 
 	infile.close();
 	outfile.close();
-
-	if (inline && !keep)
-		remove(path ~ ".bak");
 }
