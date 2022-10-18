@@ -4,6 +4,7 @@ authors "Friedel Schoen"
 copyright "Copyright © 2022, Friedel Schoen"
 license "zlib"
 
+dflags "-Jassets"
 targetType "executable"
 targetPath "bin"
 targetName "importsort-d"

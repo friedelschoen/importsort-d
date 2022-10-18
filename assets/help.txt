@@ -1,0 +1,16 @@
+{binary} v{version}
+
+Usage: {binary} [-h] [-v] [-r] [-i] [-o <out>] [-k] [-a] [-r] <input...>
+  <input> can be set to '-' to read from stdin
+` 
+Options:
+  -h, --help .......... prints this message
+  -v, --verbose ....... prints useful messages
+
+  -k, --keep .......... keeps the line as-is instead of formatting
+  -a, --attribute ..... public and static imports first
+  -b, --binding ....... sorts by binding rather then the original
+  
+  -r, --recursive ..... recursively search in directories
+  -i, --inline ........ writes to the input
+  -o, --output <path> . writes to `path` instead of stdout
