@@ -84,6 +84,8 @@ void main(string[] args) {
 			config.byAttribute = true;
 		} else if (arg == "--binding" || arg == "-b") {
 			config.byBinding = true;
+		} else if (arg == "--merge" || arg == "-m") {
+			config.merge = true;
 		} else if (arg == "--inline" || arg == "-i") {
 			inline = true;
 		} else if (arg == "--recursive" || arg == "-r") {

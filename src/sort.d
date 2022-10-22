@@ -1,6 +1,6 @@
 module importsort.sort;
 
-import std.algorithm : findSplit, sort;
+import std.algorithm : findSplit, remove, sort;
 import std.array : split;
 import std.file : DirEntry, rename;
 import std.functional : unaryFun;
@@ -15,10 +15,10 @@ enum PATTERN = ctRegex!`^(\s*)(?:(public|static)\s+)?import\s+(?:(\w+)\s*=\s*)?(
 
 struct SortConfig {
 	bool keepLine = false;
-
 	bool byAttribute = false;
 	bool byBinding = false;
 	bool verbose = false;
+	bool merge = false;
 }
 
 struct Identifier {
@@ -60,9 +60,26 @@ void writeImports(File outfile, SortConfig config, Import[] matches) {
 	if (!matches)
 		return;
 
+	if (config.merge) {
+		for (int i = 0; i < matches.length; i++) {
+			for (int j = i + 1; j < matches.length; j++) {
+				if (matches[i].name.original == matches[j].name.original
+					&& matches[i].name.binding == matches[j].name.binding) {
+
+					matches[i].line = null;
+					matches[i].idents ~= matches[j].idents;
+					matches = matches.remove(j);
+					j--;
+				}
+			}
+		}
+	}
+
 	matches.sort!((a, b) => a.sortBy < b.sortBy);
+	bool first;
+
 	foreach (m; matches) {
-		if (config.keepLine) {
+		if (config.keepLine && m.line.length > 0) {
 			outfile.write(m.line);
 		} else {
 			outfile.write(m.begin);
@@ -75,8 +92,10 @@ void writeImports(File outfile, SortConfig config, Import[] matches) {
 			} else {
 				outfile.write("import " ~ m.name.original);
 			}
-			foreach (i, ident; m.idents) {
-				auto begin = i == 0 ? " : " : ", ";
+			first = true;
+			foreach (ident; m.idents) {
+				auto begin = first ? " : " : ", ";
+				first = false;
 				if (ident.hasBinding) { // hasBinding
 					outfile.writef("%s%s = %s", begin, ident.binding, ident.original);
 				} else {

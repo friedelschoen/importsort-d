@@ -58,6 +58,7 @@ $ importsort-d [-h] [-v] [-r] [-i] [-o <out>] [-k] [-a] [-r] <input...>
 - [ ] watch-mode (struggling with save-timings - can clear files)
   - you can add importsort-d into your onSave-hooks (e. g. [Run on Save](https://marketplace.visualstudio.com/items?itemName=emeraldwalk.RunOnSave) on VSCode)
 - [ ] support multiple imports in one line (demilited by `;`)
+- [ ] merge imports
 - [ ] stripping unused imports (maybe)
 
 ## Changelog

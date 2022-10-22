@@ -10,6 +10,7 @@ Options:
   -k, --keep .......... keeps the line as-is instead of formatting
   -a, --attribute ..... public and static imports first
   -b, --binding ....... sorts by binding rather then the original
+  -m, --merge ......... merge imports which uses same file
   
   -r, --recursive ..... recursively search in directories
   -i, --inline ........ writes to the input
