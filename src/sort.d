@@ -11,44 +11,77 @@ import std.string : strip, stripLeft;
 import std.traits : isIterable;
 import std.typecons : Yes;
 
+/// the pattern to determinate a line is an import or not
 enum PATTERN = ctRegex!`^(\s*)(?:(public|static)\s+)?import\s+(?:(\w+)\s*=\s*)?([a-zA-Z._]+)\s*(:\s*\w+(?:\s*=\s*\w+)?(?:\s*,\s*\w+(?:\s*=\s*\w+)?)*)?\s*;[ \t]*([\n\r]*)$`;
 
+/// configuration for sorting imports
 struct SortConfig {
+	/// won't format the line, keep it as-is
 	bool keepLine = false;
+
+	/// sort by attributes (public/static first)
 	bool byAttribute = false;
+
+	/// sort by binding instead of the original
 	bool byBinding = false;
+
+	/// print interesting messages (TODO)
 	bool verbose = false;
+
+	/// merges imports of the same source
 	bool merge = false;
 }
 
+/// helper-struct for identifiers and its bindings
 struct Identifier {
+	/// SortConfig::byBinding
 	bool byBinding;
+
+	/// the original e. g. 'std.stdio'
 	string original;
+
+	/// the binding (alias) e. g. 'io = std.stdio'
 	string binding;
 
+	/// wether this import has a binding or not
+	@property
+	bool hasBinding() {
+		return binding != null;
+	}
+
+	/// the string to sort
 	string sortBy() {
 		if (byBinding)
 			return hasBinding ? binding : original;
 		else
 			return original;
 	}
-
-	bool hasBinding() {
-		return binding != null;
-	}
 }
 
+/// the import statement description
 struct Import {
+	/// SortConfig::byAttribute
 	bool byAttribute;
+
+	/// the original line (is `null` if merges)
 	string line;
 
+	/// is a public-import
 	bool public_;
-	bool static_;
-	Identifier name;
-	Identifier[] idents;
-	string begin;
-	string end;
 
+	/// is a static-import
+	bool static_;
+
+	/// origin of the import e. g. `import std.stdio : ...;`
+	Identifier name;
+
+	/// symbols of the import e. g. `import ... : File, stderr, in = stdin;`
+	Identifier[] idents;
+
+	/// spaces before the import (indentation)
+	string begin;
+
+	/// the string to sort
 	string sortBy() {
 		if (byAttribute && (public_ || static_))
 			return '\0' ~ name.sortBy;
@@ -56,6 +89,7 @@ struct Import {
 	}
 }
 
+/// write import-statements to `outfile` with `config`
 void writeImports(File outfile, SortConfig config, Import[] matches) {
 	if (!matches)
 		return;
@@ -107,6 +141,7 @@ void writeImports(File outfile, SortConfig config, Import[] matches) {
 	}
 }
 
+/// sort imports of an entry (file) (entries: DirEntry[])
 void sortImports(alias P = "true", R)(R entries, SortConfig config)
 		if (isIterable!R && is(ElementType!R == DirEntry)) {
 	alias postFunc = unaryFun!P;
@@ -129,6 +164,7 @@ void sortImports(alias P = "true", R)(R entries, SortConfig config)
 	}
 }
 
+/// raw-implementation of sort file (infile -> outfile)
 void sortImports(File infile, File outfile, SortConfig config) {
 	string softEnd = null;
 	Import[] matches;

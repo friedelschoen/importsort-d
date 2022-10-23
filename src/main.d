@@ -11,12 +11,18 @@ import std.functional : unaryFun;
 import std.stdio : File, stderr, stdin, stdout;
 import std.string : endsWith;
 
+/// name of binary (for help)
 enum BINARY = "importsort-d";
-enum VERSION = "0.1.0";
+
+/// current version (and something I always forget to update oops)
+enum VERSION = "0.3.0";
+
+/// the help-message from `help.txt`
 enum HELP = import("help.txt")
 		.replace("{binary}", BINARY)
 		.replace("{version}", VERSION);
 
+/// list entries (`ls`) from all arguments
 DirEntry[] listEntries(alias F = "true")(string[] input, bool recursive) {
 	alias filterFunc = unaryFun!F;
 
@@ -46,6 +52,7 @@ DirEntry[] listEntries(alias F = "true")(string[] input, bool recursive) {
 	return entries;
 }
 
+/// the main-function (nothing to explain)
 void main(string[] args) {
 	SortConfig config;
 	bool inline;
