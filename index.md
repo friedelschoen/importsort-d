@@ -1,8 +1,8 @@
 <script type="text/javascript">
   document.getElementsByTagName("header")[0].innerHTML += `
     <ul>
-      <li><a href='changelog.md'>Changelog</a></li>
-      <li><a href='add-to-editor.md'>Add to your Editor</a></li>
+      <li><a href='changelog'>Changelog</a></li>
+      <li><a href='add-to-editor'>Add to your Editor</a></li>
     </ul>`;
 </script>
 
