@@ -47,6 +47,7 @@ $ importsort-d [-h] [-v] [-r] [-i] [-o <out>] [-k] [-a] [-r] <input...>
 | `-k, --keep`          | keeps the line as-is instead of formatting     |
 | `-a, --attribute`     | public and static imports first                |
 | `-b, --binding`       | sorts by binding rather then the original      |
+| `-m, --merge`         | merge imports which uses same file             |
 |                       |                                                |
 | `-r, --recursive`     | recursively search in directories              |
 | `-i, --inline`        | changes the input                              |
@@ -55,10 +56,10 @@ $ importsort-d [-h] [-v] [-r] [-i] [-o <out>] [-k] [-a] [-r] <input...>
 ## TODO's
 
 - [x] recursive searching (`v0.2.0`)
+- [x] merge imports (`v0.3.0`)
 - [ ] watch-mode (struggling with save-timings - can clear files)
   - you can add importsort-d into your onSave-hooks (e. g. [Run on Save](https://marketplace.visualstudio.com/items?itemName=emeraldwalk.RunOnSave) on VSCode)
 - [ ] support multiple imports in one line (demilited by `;`)
-- [x] merge imports (`v0.3.0`)
 - [ ] stripping unused imports (maybe)
 
 ## Changelog
@@ -73,6 +74,12 @@ $ importsort-d [-h] [-v] [-r] [-i] [-o <out>] [-k] [-a] [-r] <input...>
 - option `--inline` doen't copy the original but creates a `*.new` and renames it afterwards
 - option `--original` becomes `--binding` and sorts by original by default
 - refactoring code
+
+### `v0.3.0`
+- added `--merge` (see above)
+
+### `v0.3.1`
+- added documentation for contributers (or people who wan't to see my code)
 
 ## License
 
