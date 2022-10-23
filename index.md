@@ -1,3 +1,14 @@
+<script type="text/javascript">
+	document.onready = function () {
+		
+    document.getElementsByTagName("header")[0].innerHTML += `
+      <ul>
+        <li><a href='changelog.md'>Changelog</a></li>
+		    <li><a href='add-to-editor.md'>Add to your Editor</a></li>
+      </ul>`;
+	}
+</script>
+
 # Sort Imports for [D](https://dlang.org/)
 
 `sortimport-d` can sort your dozens of `import`'s in a `.d` file (no matter where)
