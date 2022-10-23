@@ -81,6 +81,9 @@ struct Import {
 	/// spaces before the import (indentation)
 	string begin;
 
+	/// the newline
+	string end;
+
 	/// the string to sort
 	string sortBy() {
 		if (byAttribute && (public_ || static_))
@@ -136,7 +139,7 @@ void writeImports(File outfile, SortConfig config, Import[] matches) {
 					outfile.write(begin ~ ident.original);
 				}
 			}
-			outfile.writef(";%s", m.end);
+			outfile.writef(";", m.end);
 		}
 	}
 }
