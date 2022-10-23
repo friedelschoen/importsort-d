@@ -1,7 +1,5 @@
 # Sort Imports for [D](https://dlang.org/)
 
-<img src="assets/importsort-d.png" alt="logo" width="256" /> 
-
 `sortimport-d` can sort your dozens of `import`'s in a `.d` file (no matter where)
 
 ## Installation
@@ -62,24 +60,7 @@ $ importsort-d [-h] [-v] [-r] [-i] [-o <out>] [-k] [-a] [-r] <input...>
 - [ ] support multiple imports in one line (demilited by `;`)
 - [ ] stripping unused imports (maybe)
 
-## Changelog
-
-### `v0.1.0`
-- the very first version
-- not a lot is implemented
-
-### `v0.2.0`
-- added `--recursive` (see above)
-- option `--keep` becomes disabling formatting
-- option `--inline` doen't copy the original but creates a `*.new` and renames it afterwards
-- option `--original` becomes `--binding` and sorts by original by default
-- refactoring code
-
-### `v0.3.0`
-- added `--merge` (see above)
-
-### `v0.3.1`
-- added documentation for contributers (or people who wan't to see my code)
+> you got some ideas? Issue them!
 
 ## License
 
