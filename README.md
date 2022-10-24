@@ -1,12 +1,10 @@
 # Sort Imports for [D](https://dlang.org/)
 
-<img src="assets/importsort-d.png" alt="logo" width="256" /> 
-
 `sortimport-d` can sort your dozens of `import`'s in a `.d` file (no matter where)
 
 ## Installation
 
-## Prerequisite
+### Prerequisite
 
 - [`dub`](https://dub.pm/)
 
@@ -35,7 +33,7 @@ This won't install the command globally, you always have to run `dub run imports
 ## Usage
 
 ```
-$ importsort-d [-h] [-v] [-r] [-i] [-o <out>] [-k] [-a] [-r] <input...>
+$ importsort-d [-h] [-v] [-r] [-m] [-i] [-o <out>] [-k] [-a] [-r] <input...>
 ```
 `input` may be omitted or set to `-` to read from STDIN
 
@@ -53,7 +51,15 @@ $ importsort-d [-h] [-v] [-r] [-i] [-o <out>] [-k] [-a] [-r] <input...>
 | `-i, --inline`        | changes the input                              |
 | `-o, --output <path>` | writes to `path` rather then writing to STDOUT |
 
-## TODO's
+## Documentation
+
+Look at the documentation on [`dpldocs.info`](https://importsort-d.dpldocs.info/), if you want to use this project in code.
+
+## FAQ
+
+For example, how to add `importsort-d` to Visual Studio Code and other: [go here](/docs/tips-tricks)
+
+## ToDo's
 
 - [x] recursive searching (`v0.2.0`)
 - [x] merge imports (`v0.3.0`)
@@ -61,6 +67,8 @@ $ importsort-d [-h] [-v] [-r] [-i] [-o <out>] [-k] [-a] [-r] <input...>
   - you can add importsort-d into your onSave-hooks (e. g. [Run on Save](https://marketplace.visualstudio.com/items?itemName=emeraldwalk.RunOnSave) on VSCode)
 - [ ] support multiple imports in one line (demilited by `;`)
 - [ ] stripping unused imports (maybe)
+
+> you got some ideas? Issue them!
 
 ## Changelog
 
@@ -85,6 +93,6 @@ $ importsort-d [-h] [-v] [-r] [-i] [-o <out>] [-k] [-a] [-r] <input...>
 
 This whole project is licensed under the beautiful terms of the `zlib-license`.
 
-Further information [here](LICENSE)
+Further information [here](LICENSE).
 
 > made with love and a lot of cat memes
