@@ -11,7 +11,7 @@
 ### Building from HEAD
 
 Get the repository with `git` and compile everything with `dub`
-```
+```bash
 $ git clone https://github.com/friedelschoen/importsort-d
 $ cd importsort-d
 $ dub build
@@ -21,9 +21,19 @@ If everything went fine, there should be a binary at `bin/importsort-d`.
 
 Copy this into a directory included in `$PATH` (`/usr/bin` for example) to make this command work globally.
 
+```bash
+$ sudo cp bin/importsort-d /usr/bin/
+```
+
+or add this into your `.bashrc`, `.zshrc`, etc.
+```bash
+export PATH=$PATH:"<path/to/importsort-d>/bin/" # on bash or zsh
+fish_add_path "<path/to/importsort-d>/bin/"     # on fish-shell
+```
+
 ### Building with DUB
 
-```
+```bash
 $ dub fetch importsort-d
 $ dub run importsort-d -- --help
 ```
@@ -32,7 +42,7 @@ This won't install the command globally, you always have to run `dub run imports
 
 ## Usage
 
-```
+```bash
 $ importsort-d [-h] [-v] [-r] [-m] [-i] [-o <out>] [-k] [-a] [-r] <input...>
 ```
 `input` may be omitted or set to `-` to read from STDIN
@@ -53,18 +63,40 @@ $ importsort-d [-h] [-v] [-r] [-m] [-i] [-o <out>] [-k] [-a] [-r] <input...>
 
 ## Documentation
 
-Look at the documentation on [`dpldocs.info`](https://importsort-d.dpldocs.info/), if you want to use this project in code.
+Look at the documentation at [`dpldocs.info`](https://importsort-d.dpldocs.info/), if you want to use this project in code.
 
 ## FAQ
 
-For example, how to add `importsort-d` to Visual Studio Code and other: [go here](/docs/tips-tricks)
+### How to add `importsort-d` to Visual Studio Code?
+> There's a plugin called [Run on Save](https://marketplace.visualstudio.com/items?itemName=emeraldwalk.RunOnSave). You can install it and set `importsort-d` as an onSave-hook: 
+```json
+...
+"emeraldwalk.runonsave": {
+    "commands": [
+        {
+            "cmd": "importsort-d -i ${file}",
+            "match": "\\.d$"
+        }
+    ]
+},
+...
+```
+
+### How to add `importsort-d` to VIM/NeoVIM?
+> Just add this to your `.vimrc` or `init.vim`
+```vim
+:autocmd BufWritePost * silent !importsort-d -i <afile>
+```
+
+### Are cats cool?
+> Yes
 
 ## ToDo's
 
 - [x] recursive searching (`v0.2.0`)
 - [x] merge imports (`v0.3.0`)
 - [ ] watch-mode (struggling with save-timings - can clear files)
-  - you can add importsort-d into your onSave-hooks (e. g. [Run on Save](https://marketplace.visualstudio.com/items?itemName=emeraldwalk.RunOnSave) on VSCode)
+  - you can add importsort-d into your onSave-hooks
 - [ ] support multiple imports in one line (demilited by `;`)
 - [ ] stripping unused imports (maybe)
 
@@ -87,7 +119,7 @@ For example, how to add `importsort-d` to Visual Studio Code and other: [go here
 - added `--merge` (see above)
 
 ### `v0.3.1`
-- added documentation for contributers (or people who wan't to see my code)
+- added documentation for contributers (or people who really want to see my code)
 
 ## License
 

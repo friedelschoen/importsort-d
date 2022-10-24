@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ site.lang | default: " en-US" }}">
+<html lang="{{ site.lang | default: 'en-US' }}">
 
 <head>
 	<meta charset="UTF-8">
@@ -11,19 +11,20 @@
 	<!--[if lt IE 9]>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.min.js"></script>
     <![endif]-->
-	{% include head-custom.html %}
 
 	<style>
+		.wrapper {
+			width: 1000px;
+		}
+
+		footer,
+		header .downloads,
 		header {
 			width: 360px;
 		}
 
-		header .downloads {
-			width: 360px;
-		}
-
-		.wrapper {
-			width: 950px;
+		section {
+			width: 550px;
 		}
 	</style>
 </head>
@@ -40,10 +41,15 @@
 			<p>{{ site.description | default: site.github.project_tagline }}</p>
 
 			<p>
-				<a href="https://code.dlang.org/packages/importsort-d/">
-					<img src="https://img.shields.io/dub/v/importsort-d?color=b03931" /></a>
-				<img src="https://img.shields.io/dub/l/importsort-d" />
-				<img src="https://img.shields.io/github/commit-activity/m/friedelschoen/importsort-d" />
+				<a href="{{ site.dub_url }}">
+					<img src="https://img.shields.io/dub/v/importsort-d?color=b03931" />
+				</a>
+				<a href="LICENSE.txt">
+					<img src="https://img.shields.io/dub/l/importsort-d" />
+				</a>
+				<a href="{{ site.github.commit_url }}">
+					<img src="https://img.shields.io/github/commit-activity/m/friedelschoen/importsort-d" />
+				</a>
 			</p>
 
 			{% if site.github.is_user_page %}
