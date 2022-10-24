@@ -1,0 +1,13 @@
+# The page configuation for Jekyll (GitHub Pages)
+
+remote_theme: pages-themes/minimal@v0.2.0
+plugins:
+  - jekyll-remote-theme
+
+show_downloads: true
+logo: /assets/importsort-d.png
+dub_url: https://code.dlang.org/packages/importsort-d/
+github:
+  zip_url: https://github.com/friedelschoen/importsort-d/zipball/master
+  tar_url: https://github.com/friedelschoen/importsort-d/tarball/master
+  owner_name: Friedel Sch&ouml;n
