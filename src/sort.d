@@ -139,7 +139,7 @@ void writeImports(File outfile, SortConfig config, Import[] matches) {
 					outfile.write(begin ~ ident.original);
 				}
 			}
-			outfile.writef(";", m.end);
+			outfile.writef(";%s", m.end);
 		}
 	}
 }

@@ -2,15 +2,7 @@
 
 module importsort.main;
 
-import core.stdc.stdlib : exit;
-import importsort.sort : Import, SortConfig, sortImports;
-import std.array : replace;
-import std.conv : ConvException, parse;
-import std.file : DirEntry, SpanMode, dirEntries, exists, isDir, isFile;
-import std.functional : unaryFun;
-import std.stdio : File, stderr, stdin, stdout;
-import std.string : endsWith;
-
+import core.stdc.stdlib : exit;import importsort.sort : Import, SortConfig, sortImports;import std.array : replace;import std.conv : ConvException, parse;import std.file : DirEntry, SpanMode, dirEntries, exists, isDir, isFile;import std.functional : unaryFun;import std.stdio : File, stderr, stdin, stdout;import std.string : endsWith;
 /// name of binary (for help)
 enum BINARY = "importsort-d";
 
