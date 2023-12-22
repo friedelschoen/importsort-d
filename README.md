@@ -42,24 +42,11 @@ This won't install the command globally, you always have to run `dub run imports
 
 ## Usage
 
+see
 ```bash
-$ importsort-d [-h] [-v] [-r] [-m] [-i] [-o <out>] [-k] [-a] [-r] <input...>
+$ importsort-d --help
+$ dub run importsort-d -- --help
 ```
-`input` may be omitted or set to `-` to read from STDIN
-
-| option                | description                                    |
-| --------------------- | ---------------------------------------------- |
-| `-h, --help`          | prints a help message                          |
-| `-v, --verbose`       | prints useful debug messages                   |
-|                       |                                                |
-| `-k, --keep`          | keeps the line as-is instead of formatting     |
-| `-a, --attribute`     | public and static imports first                |
-| `-b, --binding`       | sorts by binding rather then the original      |
-| `-m, --merge`         | merge imports which uses same file             |
-|                       |                                                |
-| `-r, --recursive`     | recursively search in directories              |
-| `-i, --inline`        | changes the input                              |
-| `-o, --output <path>` | writes to `path` rather then writing to STDOUT |
 
 ## Documentation
 
@@ -74,7 +61,7 @@ Look at the documentation at [`dpldocs.info`](https://importsort-d.dpldocs.info/
 "emeraldwalk.runonsave": {
     "commands": [
         {
-            "cmd": "importsort-d -i ${file}",
+            "cmd": "importsort-d --inplace --inputs=${file}",
             "match": "\\.d$"
         }
     ]
@@ -85,7 +72,7 @@ Look at the documentation at [`dpldocs.info`](https://importsort-d.dpldocs.info/
 ### How to add `importsort-d` to VIM/NeoVIM?
 > Just add this to your `.vimrc` or `init.vim`
 ```vim
-:autocmd BufWritePost * silent !importsort-d -i <afile>
+:autocmd BufWritePost * silent !importsort-d --inplace --inputs=<afile>
 ```
 
 ### Are cats cool?
