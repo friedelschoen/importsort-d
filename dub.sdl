@@ -1,10 +1,11 @@
 name "importsort-d"
 description "sort imports of a .d-file"
-authors "Friedel Schoen"
-copyright "Copyright © 2022, Friedel Schoen"
+authors "Friedel Schön"
+copyright "Copyright © 2023, Friedel Schön"
 license "zlib"
-dependency "argparse" version="~>1.3.0"
-dflags "-J$PACKAGE_DIR/assets"
+
 targetType "executable"
 targetPath "bin"
 targetName "importsort-d"
+
+dependency "argparse" version="~>1.3.0"
