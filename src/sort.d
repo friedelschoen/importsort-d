@@ -1,6 +1,5 @@
 module importsort.sort;
 
-import argparse;
 import importsort.main : SortConfig;
 import std.algorithm : findSplit, remove, sort;
 import std.array : split;

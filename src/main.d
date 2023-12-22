@@ -6,14 +6,14 @@ import argparse;
 import core.stdc.stdlib : exit;
 import importsort.sort : Import, sortImports;
 import std.array : replace;
-import std.file : DirEntry, SpanMode, dirEntries, exists, isDir, isFile;
+import std.file : dirEntries, DirEntry, exists, isDir, isFile, SpanMode;
 import std.functional : unaryFun;
 import std.range : empty;
 import std.stdio : File, stderr, stdin, stdout;
 import std.string : endsWith;
 
 /// current version (and something I always forget to update oops)
-enum VERSION = "0.3.0";
+enum VERSION = "0.3.3";
 
 /// configuration for sorting imports
 @(Command("importsort-d").Description("Sorts dlang imports").Epilog("Version: v" ~ VERSION))
@@ -52,8 +52,6 @@ struct SortConfig {
 		@(NamedArgument(["ignore-case", "c"]).Description("ignore case when comparing elements"))
 		bool ignoreCase = false;
 	}
-
-	string[] inputs;
 }
 
 /// list entries (`ls`) from all arguments
@@ -86,28 +84,26 @@ DirEntry[] listEntries(alias F = "true")(string[] input, bool recursive) {
 	return entries;
 }
 
-mixin CLI!(SortConfig).main!((config, unparsed) {
-	config.inputs = unparsed;
-
-	if (config.recursive && config.inputs.empty) {
+mixin CLI!(SortConfig).main!((config, inputs) {
+	if (config.recursive && inputs.empty) {
 		stderr.writeln("error: cannot use '--recursive' and specify no input");
 		exit(1);
 	}
-	if (config.inplace && config.inputs.empty) {
+	if (config.inplace && inputs.empty) {
 		stderr.writeln("error: cannot use inplace and read from stdin");
 		exit(2);
 	}
-	if (!config.inputs.empty && (!config.inplace || !config.output.empty)) {
+	if (!inputs.empty && (!config.inplace || !config.output.empty)) {
 		stderr.writeln(
 			"error: if you use inputs you must use inplace sorting or provide an output");
 		exit(3);
 	}
 
-	if (config.inputs.empty) {
+	if (inputs.empty) {
 		auto outfile = config.output.empty ? stdout : File(config.output);
 		sortImports(stdin, outfile, config);
 	} else {
-		listEntries(config.inputs, config.recursive).sortImports(config);
+		listEntries(inputs, config.recursive).sortImports(config);
 	}
 	return 0;
 });
