@@ -5,6 +5,7 @@ copyright "Copyright © 2022, Friedel Schoen"
 license "zlib"
 
 dflags "-Jassets"
+dflags "-J$PACKAGE_DIR/assets"
 targetType "executable"
 targetPath "bin"
 targetName "importsort-d"
