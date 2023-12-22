@@ -20,7 +20,7 @@ enum VERSION = "0.3.3";
 struct SortConfig {
 	@(ArgumentGroup("Input/Output arguments")
 			.Description(
-				"Define in- and output behavior. Trailing arguments are considered input-files.")) {
+				"Define in- and output behavior")) {
 		@(NamedArgument(["recursive", "r"]).Description("recursively search in directories"))
 		bool recursive = false;
 
@@ -29,6 +29,9 @@ struct SortConfig {
 
 		@(NamedArgument(["output", "o"]).Description("writes to `path` instead of stdout"))
 		string output;
+
+		@(PositionalArgument(0).Description("inputfiles or folders, use - for stdin"))
+		string[] inputs;
 	}
 
 	@(ArgumentGroup("Sorting arguments").Description("Tune import sorting algorithms")) {
@@ -84,26 +87,26 @@ DirEntry[] listEntries(alias F = "true")(string[] input, bool recursive) {
 	return entries;
 }
 
-mixin CLI!(SortConfig).main!((config, inputs) {
-	if (config.recursive && inputs.empty) {
+mixin CLI!(SortConfig).main!((config) {
+	if (config.recursive && config.inputs.empty) {
 		stderr.writeln("error: cannot use '--recursive' and specify no input");
 		exit(1);
 	}
-	if (config.inplace && inputs.empty) {
+	if (config.inplace && config.inputs.empty) {
 		stderr.writeln("error: cannot use inplace and read from stdin");
 		exit(2);
 	}
-	if (!inputs.empty && (!config.inplace || !config.output.empty)) {
+	if (!config.inputs.empty && (!config.inplace || !config.output.empty)) {
 		stderr.writeln(
 			"error: if you use inputs you must use inplace sorting or provide an output");
 		exit(3);
 	}
 
-	if (inputs.empty) {
+	if (config.inputs.empty) {
 		auto outfile = config.output.empty ? stdout : File(config.output);
 		sortImports(stdin, outfile, config);
 	} else {
-		listEntries(inputs, config.recursive).sortImports(config);
+		listEntries(config.inputs, config.recursive).sortImports(config);
 	}
 	return 0;
 });
