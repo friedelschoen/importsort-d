@@ -10,6 +10,8 @@ import std.stdio : File, stderr;
 import std.string : strip, stripLeft;
 import std.traits : isIterable;
 import std.typecons : Yes;
+import std.conv : to;
+import std.uni : asLowerCase;
 
 /// the pattern to determinate a line is an import or not
 enum PATTERN = ctRegex!`^(\s*)(?:(public|static)\s+)?import\s+(?:(\w+)\s*=\s*)?([a-zA-Z._]+)\s*(:\s*\w+(?:\s*=\s*\w+)?(?:\s*,\s*\w+(?:\s*=\s*\w+)?)*)?\s*;[ \t]*([\n\r]*)$`;
@@ -30,6 +32,9 @@ struct SortConfig {
 
 	/// merges imports of the same source
 	bool merge = false;
+
+	/// ignore case when sorting
+	bool ignoreCase = false;
 }
 
 /// helper-struct for identifiers and its bindings
@@ -92,6 +97,11 @@ struct Import {
 	}
 }
 
+bool less(SortConfig config, string a, string b)
+{
+    return config.ignoreCase ? a.asLowerCase.to!string < b.asLowerCase.to!string : a < b;
+}
+
 /// write import-statements to `outfile` with `config`
 void writeImports(File outfile, SortConfig config, Import[] matches) {
 	if (!matches)
@@ -112,7 +122,7 @@ void writeImports(File outfile, SortConfig config, Import[] matches) {
 		}
 	}
 
-	matches.sort!((a, b) => a.sortBy < b.sortBy);
+	matches.sort!((a, b) => less(config, a.sortBy, b.sortBy));
 	bool first;
 
 	foreach (m; matches) {
@@ -203,7 +213,7 @@ void sortImports(File infile, File outfile, SortConfig config) {
 						im.idents ~= Identifier(config.byBinding, id.strip);
 					}
 				}
-				im.idents.sort!((a, b) => a.sortBy < b.sortBy);
+				im.idents.sort!((a, b) => less(config, a.sortBy, b.sortBy));
 			}
 			matches ~= im;
 		} else {

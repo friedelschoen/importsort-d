@@ -2,7 +2,7 @@
 
 Usage: {binary} [-h] [-v] [-r] [-i] [-o <out>] [-k] [-a] [-r] <input...>
   <input> can be set to '-' to read from stdin
-` 
+`
 Options:
   -h, --help .......... prints this message
   -v, --verbose ....... prints useful messages
@@ -11,7 +11,8 @@ Options:
   -a, --attribute ..... public and static imports first
   -b, --binding ....... sorts by binding rather then the original
   -m, --merge ......... merge imports which uses same file
-  
+  -c, --ignoreCase .... ignore case
+
   -r, --recursive ..... recursively search in directories
   -i, --inline ........ writes to the input
   -o, --output <path> . writes to `path` instead of stdout

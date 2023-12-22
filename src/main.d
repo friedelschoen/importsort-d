@@ -85,6 +85,8 @@ void main(string[] args) {
 			config.byBinding = true;
 		} else if (arg == "--merge" || arg == "-m") {
 			config.merge = true;
+		} else if (arg == "--ignoreCase" || arg == "-c") {
+			config.ignoreCase = true;
 		} else if (arg == "--inline" || arg == "-i") {
 			inline = true;
 		} else if (arg == "--recursive" || arg == "-r") {
@@ -106,7 +108,7 @@ void main(string[] args) {
 				exit(1);
 			}
 			nextOutput = true;
-		} else if (arg[0] == '-') {
+                } else if (arg[0] == '-') {
 			stderr.writef("error: unknown option '%s'\n", arg);
 			stderr.writeln(HELP);
 			exit(1);
