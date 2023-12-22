@@ -61,7 +61,7 @@ Look at the documentation at [`dpldocs.info`](https://importsort-d.dpldocs.info/
 "emeraldwalk.runonsave": {
     "commands": [
         {
-            "cmd": "importsort-d --inplace --inputs=${file}",
+            "cmd": "importsort-d --inplace ${file}",
             "match": "\\.d$"
         }
     ]
@@ -72,7 +72,7 @@ Look at the documentation at [`dpldocs.info`](https://importsort-d.dpldocs.info/
 ### How to add `importsort-d` to VIM/NeoVIM?
 > Just add this to your `.vimrc` or `init.vim`
 ```vim
-:autocmd BufWritePost * silent !importsort-d --inplace --inputs=<afile>
+:autocmd BufWritePost * silent !importsort-d --inplace <afile>
 ```
 
 ### Are cats cool?

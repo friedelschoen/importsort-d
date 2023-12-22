@@ -1,7 +1,10 @@
 module importsort.sort;
 
+import argparse;
+import importsort.main : SortConfig;
 import std.algorithm : findSplit, remove, sort;
 import std.array : split;
+import std.conv : to;
 import std.file : DirEntry, rename;
 import std.functional : unaryFun;
 import std.range : ElementType;
@@ -10,54 +13,7 @@ import std.stdio : File, stderr;
 import std.string : strip, stripLeft;
 import std.traits : isIterable;
 import std.typecons : Yes;
-import std.conv : to;
 import std.uni : asLowerCase;
-import argparse;
-
-/// current version (and something I always forget to update oops)
-enum VERSION = "0.3.0";
-
-/// configuration for sorting imports
-@(Command("importsort-d").Description("Sorts dlang imports").Epilog("Version: v" ~ VERSION))
-struct SortConfig {
-	@(ArgumentGroup("Input/Output arguments").Description("Define in- and output behavior")) {
-		@(NamedArgument(["recursive", "r"]).Description("recursively search in directories"))
-		bool recursive = false;
-
-		@(NamedArgument(["inplace", "i"]).Description("writes to the input"))
-		bool inplace = false;
-
-		@(NamedArgument(["output", "o"]).Description("writes to `path` instead of stdout"))
-		string output;
-
-		@(NamedArgument(["inputs", "in"])
-				.Description("input files or directories, can be set to '-' to read from stdin"))
-		string[] inputs;
-	}
-
-	@(ArgumentGroup("Sorting arguments").Description("Tune import sorting algorithms")) {
-		/// won't format the line, keep it as-is
-		@(NamedArgument(["keep", "k"]).Description("keeps the line as-is instead of formatting"))
-		bool keepLine = false;
-
-		@(NamedArgument(["attribute", "a"]).Description("public and static imports first"))
-		 /// sort by attributes (public/static first)
-		bool byAttribute = false;
-
-		@(NamedArgument(["binding", "b"]).Description("sorts by binding rather then the original"))
-		 /// sort by binding instead of the original
-		bool byBinding = false;
-
-		@(NamedArgument(["merge", "m"]).Description("merge imports which uses same file"))
-		 /// merges imports of the same source
-		bool merge = false;
-
-		/// ignore case when sorting
-		@(NamedArgument(["ignoreCase", "c"]).Description("ignore case when comparing elements"))
-		bool ignoreCase = false;
-	}
-
-}
 
 /// the pattern to determinate a line is an import or not
 enum PATTERN = ctRegex!`^(\s*)(?:(public|static)\s+)?import\s+(?:(\w+)\s*=\s*)?([a-zA-Z._]+)\s*(:\s*\w+(?:\s*=\s*\w+)?(?:\s*,\s*\w+(?:\s*=\s*\w+)?)*)?\s*;[ \t]*([\n\r]*)$`;

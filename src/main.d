@@ -1,16 +1,60 @@
 // (c) 2022 Friedel Schon <derfriedmundschoen@gmail.com>
 
 module importsort.main;
-import importsort.sort : SortConfig;
-import argparse : CLI;
+
+import argparse;
 import core.stdc.stdlib : exit;
 import importsort.sort : Import, sortImports;
 import std.array : replace;
 import std.file : DirEntry, SpanMode, dirEntries, exists, isDir, isFile;
 import std.functional : unaryFun;
-import std.stdio : File, stderr, stdin, stdout;
 import std.range : empty;
+import std.stdio : File, stderr, stdin, stdout;
 import std.string : endsWith;
+
+/// current version (and something I always forget to update oops)
+enum VERSION = "0.3.0";
+
+/// configuration for sorting imports
+@(Command("importsort-d").Description("Sorts dlang imports").Epilog("Version: v" ~ VERSION))
+struct SortConfig {
+	@(ArgumentGroup("Input/Output arguments")
+			.Description(
+				"Define in- and output behavior. Trailing arguments are considered input-files.")) {
+		@(NamedArgument(["recursive", "r"]).Description("recursively search in directories"))
+		bool recursive = false;
+
+		@(NamedArgument(["inplace", "i"]).Description("writes to the input"))
+		bool inplace = false;
+
+		@(NamedArgument(["output", "o"]).Description("writes to `path` instead of stdout"))
+		string output;
+	}
+
+	@(ArgumentGroup("Sorting arguments").Description("Tune import sorting algorithms")) {
+		/// won't format the line, keep it as-is
+		@(NamedArgument(["keep", "k"]).Description("keeps the line as-is instead of formatting"))
+		bool keepLine = false;
+
+		@(NamedArgument(["attribute", "a"]).Description("public and static imports first"))
+		 /// sort by attributes (public/static first)
+		bool byAttribute = false;
+
+		@(NamedArgument(["binding", "b"]).Description("sorts by binding rather then the original"))
+		 /// sort by binding instead of the original
+		bool byBinding = false;
+
+		@(NamedArgument(["merge", "m"]).Description("merge imports which uses same file"))
+		 /// merges imports of the same source
+		bool merge = false;
+
+		/// ignore case when sorting
+		@(NamedArgument(["ignore-case", "c"]).Description("ignore case when comparing elements"))
+		bool ignoreCase = false;
+	}
+
+	string[] inputs;
+}
 
 /// list entries (`ls`) from all arguments
 DirEntry[] listEntries(alias F = "true")(string[] input, bool recursive) {
@@ -42,7 +86,9 @@ DirEntry[] listEntries(alias F = "true")(string[] input, bool recursive) {
 	return entries;
 }
 
-int _main(SortConfig config) {
+mixin CLI!(SortConfig).main!((config, unparsed) {
+	config.inputs = unparsed;
+
 	if (config.recursive && config.inputs.empty) {
 		stderr.writeln("error: cannot use '--recursive' and specify no input");
 		exit(1);
@@ -64,6 +110,4 @@ int _main(SortConfig config) {
 		listEntries(config.inputs, config.recursive).sortImports(config);
 	}
 	return 0;
-}
-
-mixin CLI!(SortConfig).main!((config) { return _main(config); });
+});
