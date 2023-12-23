@@ -97,10 +97,12 @@ mixin CLI!(SortConfig).main!((SortConfig config) {
 		stderr.writeln("error: cannot use '--recursive' and specify no input");
 		exit(1);
 	}
+
 	if (config.inplace && config.inputs.empty) {
 		stderr.writeln("error: cannot use inplace and read from stdin");
 		exit(2);
 	}
+
 	if (!config.inputs.empty && (!config.inplace || !config.output.empty)) {
 		stderr.writeln(
 			"error: if you use inputs you must use inplace sorting or provide an output");

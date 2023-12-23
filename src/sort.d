@@ -3,25 +3,44 @@
 module importsort.sort;
 
 import importsort.main : SortConfig;
-import std.algorithm : findSplit, remove, sort;
+import std.algorithm : canFind, findSplit, remove, sort;
 import std.algorithm.comparison : equal;
+import std.algorithm.searching : all;
 import std.array : split;
 import std.conv : to;
 import std.file : DirEntry, rename;
 import std.functional : unaryFun;
-import std.range : ElementType;
+import std.range : ElementType, empty;
 import std.regex : ctRegex, matchFirst;
 import std.stdio : File, stderr;
 import std.string : strip, stripLeft;
 import std.traits : isIterable;
 import std.typecons : Nullable, Yes, nullable;
-import std.uni : asLowerCase;
+import std.uni : asLowerCase, isSpace, isWhite;
 
 /// the pattern to determinate a line is an import or not
-enum PATTERN = ctRegex!`^(\s*)(?:(public|static)\s+)?import\s+(?:(\w+)\s*=\s*)?([a-zA-Z._]+)\s*(:\s*\w+(?:\s*=\s*\w+)?(?:\s*,\s*\w+(?:\s*=\s*\w+)?)*)?\s*;[ \t]*([\n\r]*)$`;
+enum PATTERN = ctRegex!`(?:(public|static)\s+)?import\s+(?:(\w+)\s*=\s*)?([a-zA-Z._]+)\s*(:\s*\w+(?:\s*=\s*\w+)?(?:\s*,\s*\w+(?:\s*=\s*\w+)?)*)?;`;
 
 bool iterableOf(T, E)() {
 	return isIterable!T && is(ElementType!T == E);
+}
+
+T[] uniq(T)(in T[] s) {
+	T[] result;
+	foreach (T c; s)
+		if (!result.canFind(c))
+			result ~= c;
+	return result;
+}
+
+string getLineEnding(string str) {
+	string ending = "";
+	foreach_reverse (chr; str) {
+		if (chr != '\n' && chr != '\r')
+			break;
+		ending = chr ~ ending;
+	}
+	return ending;
 }
 
 /// helper-struct for identifiers and its bindings
@@ -63,10 +82,10 @@ struct Import {
 	/// is a static-import
 	bool static_;
 
-	/// origin of the import e. g. `import std.stdio : ...;`
+	/// origin of the import e. g. `import std.stdio : ...`
 	Identifier name;
 
-	/// symbols of the import e. g. `import ... : File, stderr, in = stdin;`
+	/// symbols of the import e. g. `import ... : File, stderr, in = stdin`
 	Identifier[] idents;
 
 	/// spaces before the import (indentation)
@@ -87,7 +106,7 @@ bool less(SortConfig config, string a, string b) {
 	return config.ignoreCase ? a.asLowerCase.to!string < b.asLowerCase.to!string : a < b;
 }
 
-void sortMatches(SortConfig config, Import[] matches) {
+Import[] sortMatches(SortConfig config, Import[] matches) {
 	if (config.merge) {
 		for (int i = 0; i < matches.length; i++) {
 			for (int j = i + 1; j < matches.length; j++) {
@@ -101,12 +120,17 @@ void sortMatches(SortConfig config, Import[] matches) {
 				}
 			}
 		}
+
+		foreach (ref match; matches)
+			match.idents = uniq(match.idents);
 	}
 
 	matches.sort!((a, b) => less(config, a.sortBy, b.sortBy));
 
 	foreach (m; matches)
 		m.idents.sort!((a, b) => less(config, a.sortBy, b.sortBy));
+
+	return matches;
 }
 
 bool checkChanged(SortConfig config, Import[] matches) {
@@ -115,7 +139,7 @@ bool checkChanged(SortConfig config, Import[] matches) {
 
 	auto original = matches.dup;
 
-	sortMatches(config, matches);
+	matches = sortMatches(config, matches);
 
 	return !equal(original, matches);
 }
@@ -125,7 +149,7 @@ void writeImports(File outfile, SortConfig config, Import[] matches) {
 	if (!matches)
 		return;
 
-	sortMatches(config, matches);
+	matches = sortMatches(config, matches);
 
 	bool first;
 
@@ -189,6 +213,8 @@ bool sortImports(SortConfig config, File infile, Nullable!File outfile) {
 
 	foreach (line; infile.byLine(Yes.keepTerminator)) {
 		auto linestr = line.idup;
+
+	parse_match:
 		if (auto match = linestr.matchFirst(PATTERN)) { // is import
 			if (softEnd) {
 				if (!matches && !outfile.isNull)
@@ -197,21 +223,38 @@ bool sortImports(SortConfig config, File infile, Nullable!File outfile) {
 			}
 
 			auto im = Import(config.byAttribute, linestr);
-			if (match[3]) {
-				im.name = Identifier(config.byBinding, match[4], match[3]);
-			} else {
-				im.name = Identifier(config.byBinding, match[4]);
-			}
-			im.begin = match[1];
-			im.end = match[6];
 
-			if (match[2] == "static")
+			if (!match.pre.all!isSpace) {
+				if (matches) {
+					im.begin = matches[$ - 1].begin;
+
+					if (!outfile.isNull)
+						outfile.get().writeImports(config, matches);
+					else if (checkChanged(config, matches))
+						return true;
+
+					matches = [];
+				}
+
+				if (!outfile.isNull)
+					outfile.get().writeln(line);
+			} else {
+				im.begin = match.pre;
+			}
+
+			if (match[2]) {
+				im.name = Identifier(config.byBinding, match[3], match[2]);
+			} else {
+				im.name = Identifier(config.byBinding, match[3]);
+			}
+
+			if (match[1] == "static")
 				im.static_ = true;
-			else if (match[2] == "public")
+			else if (match[1] == "public")
 				im.public_ = true;
 
-			if (match[5]) {
-				foreach (id; match[5][1 .. $].split(",")) {
+			if (match[4]) {
+				foreach (id; match[4][1 .. $].split(",")) {
 					if (auto pair = id.findSplit("=")) { // has alias
 						im.idents ~= Identifier(config.byBinding, pair[2].strip, pair[0].strip);
 					} else {
@@ -219,9 +262,16 @@ bool sortImports(SortConfig config, File infile, Nullable!File outfile) {
 					}
 				}
 			}
+
+			im.end = linestr.getLineEnding;
 			matches ~= im;
+
+			if (!match.post.all!isWhite) {
+				linestr = match.post.idup;
+				goto parse_match;
+			}
 		} else {
-			if (!softEnd && linestr.stripLeft == "") {
+			if (!softEnd && linestr.all!isSpace) {
 				softEnd = linestr;
 			} else {
 				if (matches) {
@@ -247,8 +297,8 @@ bool sortImports(SortConfig config, File infile, Nullable!File outfile) {
 
 	if (!outfile.isNull)
 		outfile.get().writeImports(config, matches);
-	else if (checkChanged(config, matches))
-		return true;
+	else
+		return checkChanged(config, matches);
 
 	return false;
 }
