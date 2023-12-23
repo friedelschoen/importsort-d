@@ -96,17 +96,23 @@ Look at the documentation at [`dpldocs.info`](https://importsort-d.dpldocs.info/
 - not a lot is implemented
 
 ### `v0.2.0`
-- added `--recursive` (see above)
+- added `--recursive`
 - option `--keep` becomes disabling formatting
-- option `--inline` doen't copy the original but creates a `*.new` and renames it afterwards
+- option `--inline` don't copy the original but creates a `*.new` and renames it afterwards
 - option `--original` becomes `--binding` and sorts by original by default
 - refactoring code
 
 ### `v0.3.0`
-- added `--merge` (see above)
+- added `--merge`
 
 ### `v0.3.1`
 - added documentation for contributers (or people who really want to see my code)
+
+### `v0.3.2`
+- new argument-parsing
+- added `--ignore-case` (_pull-request #2_)
+- already sorted files won't be resorted and added `--force` (_issue #5_)
+- multiple `import` in one line will be split up in multiple lines
 
 ## License
 
