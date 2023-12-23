@@ -113,6 +113,7 @@ Look at the documentation at [`dpldocs.info`](https://importsort-d.dpldocs.info/
 - added `--ignore-case` (_pull-request #2_)
 - already sorted files won't be resorted and added `--force` (_issue #5_)
 - multiple `import` in one line will be split up in multiple lines
+- `--inline` is renamed to `--inplace`
 
 ## License
 
