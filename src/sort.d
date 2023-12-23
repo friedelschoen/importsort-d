@@ -20,6 +20,10 @@ import std.uni : asLowerCase;
 /// the pattern to determinate a line is an import or not
 enum PATTERN = ctRegex!`^(\s*)(?:(public|static)\s+)?import\s+(?:(\w+)\s*=\s*)?([a-zA-Z._]+)\s*(:\s*\w+(?:\s*=\s*\w+)?(?:\s*,\s*\w+(?:\s*=\s*\w+)?)*)?\s*;[ \t]*([\n\r]*)$`;
 
+bool iterableOf(T, E)() {
+	return isIterable!T && is(ElementType!T == E);
+}
+
 /// helper-struct for identifiers and its bindings
 struct Identifier {
 	/// SortConfig::byBinding
@@ -155,20 +159,22 @@ void writeImports(File outfile, SortConfig config, Import[] matches) {
 }
 
 /// sort imports of an entry (file) (entries: DirEntry[])
-void sortImports(R)(R entries, SortConfig config)
-		if (isIterable!R && is(ElementType!R == DirEntry)) {
+void sortImports(R)(R entries, SortConfig config) if (iterableOf!(R, DirEntry)) {
 
 	File infile, outfile;
 	foreach (entry; entries) {
 		infile = File(entry.name);
 
-		if (sortImports(config, infile, Nullable!(File).init)) { // is changed
-			infile.seek(0);
+		if (config.force || sortImports(config, infile, Nullable!(File).init)) { // is changed
+			if (!config.force)
+				infile.seek(0);
+
 			outfile = File(entry.name ~ ".new", "w");
 			sortImports(config, infile, nullable(outfile));
 			rename(entry.name ~ ".new", entry.name);
-			stderr.writef("\033[34msorted    \033[0;1m%s\033[0m\n", entry.name);
 			outfile.close();
+
+			stderr.writef("\033[34msorted    \033[0;1m%s\033[0m\n", entry.name);
 		} else {
 			stderr.writef("\033[33munchanged \033[0;1m%s\033[0m\n", entry.name);
 		}

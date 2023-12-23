@@ -14,7 +14,7 @@ import std.string : endsWith;
 import std.typecons : nullable;
 
 /// current version (and something I always forget to update oops)
-enum VERSION = "0.3.3";
+enum VERSION = "0.3.2";
 
 /// configuration for sorting imports
 @(Command("importsort-d").Description("Sorts dlang imports").Epilog("Version: v" ~ VERSION))
@@ -27,6 +27,10 @@ struct SortConfig {
 
 		@(NamedArgument(["inplace", "i"]).Description("writes to the input"))
 		bool inplace = false;
+
+		@(NamedArgument(["force", "f"])
+				.Description("always write file, don't check if sorting is required"))
+		bool force = false;
 
 		@(NamedArgument(["output", "o"]).Description("writes to `path` instead of stdout"))
 		string output;
