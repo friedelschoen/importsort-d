@@ -1,4 +1,4 @@
-// (c) 2022 Friedel Schon <derfriedmundschoen@gmail.com>
+// (c) 2022-2023 Friedel Schon <derfriedmundschoen@gmail.com>
 
 module importsort.main;
 
@@ -6,11 +6,12 @@ import argparse;
 import core.stdc.stdlib : exit;
 import importsort.sort : Import, sortImports;
 import std.array : replace;
-import std.file : dirEntries, DirEntry, exists, isDir, isFile, SpanMode;
+import std.file : DirEntry, SpanMode, dirEntries, exists, isDir, isFile;
 import std.functional : unaryFun;
 import std.range : empty;
 import std.stdio : File, stderr, stdin, stdout;
 import std.string : endsWith;
+import std.typecons : nullable;
 
 /// current version (and something I always forget to update oops)
 enum VERSION = "0.3.3";
@@ -30,7 +31,7 @@ struct SortConfig {
 		@(NamedArgument(["output", "o"]).Description("writes to `path` instead of stdout"))
 		string output;
 
-		@(PositionalArgument(0).Description("inputfiles or folders, use - for stdin"))
+		@(PositionalArgument(0).Description("inputfiles or directories, use - for stdin"))
 		string[] inputs;
 	}
 
@@ -87,7 +88,7 @@ DirEntry[] listEntries(alias F = "true")(string[] input, bool recursive) {
 	return entries;
 }
 
-mixin CLI!(SortConfig).main!((config) {
+mixin CLI!(SortConfig).main!((SortConfig config) {
 	if (config.recursive && config.inputs.empty) {
 		stderr.writeln("error: cannot use '--recursive' and specify no input");
 		exit(1);
@@ -104,7 +105,7 @@ mixin CLI!(SortConfig).main!((config) {
 
 	if (config.inputs.empty) {
 		auto outfile = config.output.empty ? stdout : File(config.output);
-		sortImports(stdin, outfile, config);
+		sortImports(config, stdin, nullable(outfile));
 	} else {
 		listEntries(config.inputs, config.recursive).sortImports(config);
 	}

@@ -1,7 +1,10 @@
+// (c) 2022-2023 Friedel Schon <derfriedmundschoen@gmail.com>
+
 module importsort.sort;
 
 import importsort.main : SortConfig;
 import std.algorithm : findSplit, remove, sort;
+import std.algorithm.comparison : equal;
 import std.array : split;
 import std.conv : to;
 import std.file : DirEntry, rename;
@@ -11,7 +14,7 @@ import std.regex : ctRegex, matchFirst;
 import std.stdio : File, stderr;
 import std.string : strip, stripLeft;
 import std.traits : isIterable;
-import std.typecons : Yes;
+import std.typecons : Nullable, Yes, nullable;
 import std.uni : asLowerCase;
 
 /// the pattern to determinate a line is an import or not
@@ -80,11 +83,7 @@ bool less(SortConfig config, string a, string b) {
 	return config.ignoreCase ? a.asLowerCase.to!string < b.asLowerCase.to!string : a < b;
 }
 
-/// write import-statements to `outfile` with `config`
-void writeImports(File outfile, SortConfig config, Import[] matches) {
-	if (!matches)
-		return;
-
+void sortMatches(SortConfig config, Import[] matches) {
 	if (config.merge) {
 		for (int i = 0; i < matches.length; i++) {
 			for (int j = i + 1; j < matches.length; j++) {
@@ -101,6 +100,29 @@ void writeImports(File outfile, SortConfig config, Import[] matches) {
 	}
 
 	matches.sort!((a, b) => less(config, a.sortBy, b.sortBy));
+
+	foreach (m; matches)
+		m.idents.sort!((a, b) => less(config, a.sortBy, b.sortBy));
+}
+
+bool checkChanged(SortConfig config, Import[] matches) {
+	if (!matches)
+		return false;
+
+	auto original = matches.dup;
+
+	sortMatches(config, matches);
+
+	return !equal(original, matches);
+}
+
+/// write import-statements to `outfile` with `config`
+void writeImports(File outfile, SortConfig config, Import[] matches) {
+	if (!matches)
+		return;
+
+	sortMatches(config, matches);
+
 	bool first;
 
 	foreach (m; matches) {
@@ -133,30 +155,29 @@ void writeImports(File outfile, SortConfig config, Import[] matches) {
 }
 
 /// sort imports of an entry (file) (entries: DirEntry[])
-void sortImports(alias P = "true", R)(R entries, SortConfig config)
+void sortImports(R)(R entries, SortConfig config)
 		if (isIterable!R && is(ElementType!R == DirEntry)) {
-	alias postFunc = unaryFun!P;
 
 	File infile, outfile;
 	foreach (entry; entries) {
-		stderr.writef("\033[34msorting \033[0;1m%s\033[0m\n", entry.name);
-
 		infile = File(entry.name);
-		outfile = File(entry.name ~ ".new", "w");
 
-		sortImports(infile, outfile, config);
+		if (sortImports(config, infile, Nullable!(File).init)) { // is changed
+			infile.seek(0);
+			outfile = File(entry.name ~ ".new", "w");
+			sortImports(config, infile, nullable(outfile));
+			rename(entry.name ~ ".new", entry.name);
+			stderr.writef("\033[34msorted    \033[0;1m%s\033[0m\n", entry.name);
+			outfile.close();
+		} else {
+			stderr.writef("\033[33munchanged \033[0;1m%s\033[0m\n", entry.name);
+		}
 
 		infile.close();
-		outfile.close();
-
-		rename(entry.name ~ ".new", entry.name);
-
-		cast(void) postFunc(entry.name);
 	}
 }
 
-/// raw-implementation of sort file (infile -> outfile)
-void sortImports(File infile, File outfile, SortConfig config) {
+bool sortImports(SortConfig config, File infile, Nullable!File outfile) {
 	string softEnd = null;
 	Import[] matches;
 
@@ -164,8 +185,8 @@ void sortImports(File infile, File outfile, SortConfig config) {
 		auto linestr = line.idup;
 		if (auto match = linestr.matchFirst(PATTERN)) { // is import
 			if (softEnd) {
-				if (!matches)
-					outfile.write(softEnd);
+				if (!matches && !outfile.isNull)
+					outfile.get().write(softEnd);
 				softEnd = null;
 			}
 
@@ -191,7 +212,6 @@ void sortImports(File infile, File outfile, SortConfig config) {
 						im.idents ~= Identifier(config.byBinding, id.strip);
 					}
 				}
-				im.idents.sort!((a, b) => less(config, a.sortBy, b.sortBy));
 			}
 			matches ~= im;
 		} else {
@@ -199,16 +219,30 @@ void sortImports(File infile, File outfile, SortConfig config) {
 				softEnd = linestr;
 			} else {
 				if (matches) {
-					outfile.writeImports(config, matches);
+					if (!outfile.isNull)
+						outfile.get().writeImports(config, matches);
+					else if (checkChanged(config, matches))
+						return true;
+
 					matches = [];
 				}
 				if (softEnd) {
-					outfile.write(softEnd);
+					if (!outfile.isNull)
+						outfile.get().write(softEnd);
 					softEnd = null;
 				}
-				outfile.write(line);
+				if (!outfile.isNull)
+					outfile.get().write(line);
 			}
 		}
 	}
-	outfile.writeImports(config, matches);
+
+	// flush last imports
+
+	if (!outfile.isNull)
+		outfile.get().writeImports(config, matches);
+	else if (checkChanged(config, matches))
+		return true;
+
+	return false;
 }
